@@ -8,7 +8,9 @@ class SSHKeySignature
   attr_reader :signature
   attr_reader :identity
 
-  def initialize
+  def initialize(account)
+    @use_agent = true
+    @account = account
   end
 
   def self.from_string(string)
@@ -18,7 +20,7 @@ class SSHKeySignature
   end
 
   # Parse an ssh key signature. Expects a signed string that came from the ssh
-  # agent, such as from SSHAgent#sign
+  # agent, such as from SSHKeyAuth#sign
   def parse(string)
     offset = 0
     typelen = string[offset..(offset + 3)].reverse.unpack("L")[0]
@@ -31,18 +33,23 @@ class SSHKeySignature
   end # def parse
 end
 
-class SSHAgent
+class SSHKeyAuth
   def initialize
     @agent = Net::SSH::Authentication::Agent.new
+    @use_agent = true
   end # def initialize
 
   def ensure_connected
-    @agent.connect! if !@agent.socket
+    begin
+      @agent.connect! if !@agent.socket
+    rescue Net::SSH::Authentication::AgentNotAvailable => e
+      @use_agent = false
+    end
   end # def ensure_connected
 
   def sign(string)
     ensure_connected
-    identities = @agent.identities
+    identities = signing_identities 
     signatures = {}
     identities.each do |identity|
       signatures[identity] = SSHKeySignature.from_string(@agent.sign(identity, string))
@@ -56,12 +63,24 @@ class SSHAgent
     end
 
     ensure_connected
-    identities = @agent.identities
+    identities = verifying_identities
     results = {}
     identities.each do |identity|
       results[identity] = identity.ssh_do_verify(signature, original)
     end
     return results
   end
-end # class SSHAgent
+
+  def signing_identities
+    return @agent.identities
+  end # def signing_identities
+
+  def verifying_identities
+    identities = []
+    @agent.identities.each { |id| identities << id }
+
+    if ENV.include?("HOME") and File.exists?("#{ENV["HOME"]}/.ssh/authorized_keys
+
+  end
+end # class SSHKeyAuth
 
