@@ -1,13 +1,15 @@
 require "lib/sshkeyauth"
 require "ap"
-agent = SSHKeyAuth.new
+require "etc"
+
+agent = SSHKeyAuth.new(Etc.getlogin)
 
 data = "hello"
 sigs = agent.sign(data)
 
-
-
 sigs.each do |identity, sig|
-  ap agent.verify(sig, data)
-end
+  if agent.verify?(sig, data)
+    puts "Verified: #{identity.comment}"
+  end
+end # sigs.each
 
