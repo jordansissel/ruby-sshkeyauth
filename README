@@ -1,0 +1,24 @@
+
+This projects aims to provide authentication by using ssh keys.
+
+Most infrastructures I've managed have had bits of single-sign-on mixed
+not-so-single-sign-on. Further, the first thing I disable in sshd is always
+password authentication and make sure everyone gets an ssh key and knows
+how to use it.
+
+I like ssh keys. They're simple. On my infrastructure, they're everywhere. It's
+how you log in.
+
+With tools like mcollective, openvpn, etc, you often need a way to authorize
+and authenticate users. With OpenVPN you can use passwords or SSL certs.
+Managing my own SSL CA is not my idea of a good time, but is often required
+for some things. Further, teaching engineers how to use SSH with keys is hard
+enough without saying "oh, here's another authentication scheme with your SSL
+cert."
+
+Add PGP to the mix, and you've got big frownyface - from me, anyway.
+
+The point of writing this module was to allow authentication of messages from
+specific users over mcollective. The goal is to be able to use keys in your
+ssh-agent and sign messages - having them verified on the remote end by using
+your own user's authorized_keys file.
