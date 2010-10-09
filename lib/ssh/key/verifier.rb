@@ -4,12 +4,27 @@ require "rubygems"
 require "net/ssh"
 require "etc"
 
-class SSHKeyVerifier
+module SSH; module Net; class Verifier
   attr_accessor :account
   attr_accessor :sshd_config_file
   attr_accessor :logger
 
-  def initialize(account)
+  # We only support protocol 2 public keys.
+  # protocol2 is: options keytype b64key comment
+  AUTHORIZED_KEYS_REGEX = 
+    /^((?:[A-Za-z0-9-]+(?:="[^"]+")?,?)+ *)?(ssh-(?:dss|rsa)) *([^ ]*) *(.*)/
+
+  # A new SSH Key Verifier.
+  #
+  # * account - optional string username. Should be a valid user on the system.
+  #
+  # If account is nil or omitted, then it defaults to the user running
+  # this process (current user)
+  def initialize(account=nil)
+    if account == nil
+      account = Etc.getlogin
+    end
+
     @account = account
     @agent = Net::SSH::Authentication::Agent.new
     @use_agent = true
@@ -25,6 +40,13 @@ class SSHKeyVerifier
     end
   end # def ensure_connected
 
+  # Can we validate 'original' against the signature(s)?
+  #
+  # * signature - a single SSH::Key::Signature or 
+  #   hash of { identity => signature } values.
+  # * original - the original string to verify against
+  #
+  # See also: SSH::Key::Signer#sign
   def verify?(signature, original)
     results = verify(signature, original)
     results.each do |identity, verified|
@@ -35,16 +57,24 @@ class SSHKeyVerifier
     return false
   end # def verify?
 
-  def verify(signature, original)
-    if signature.is_a? SSHKeySignature
-      signature = signature.signature
+  def verify_one(signature, original)
+    identity = :default
+    results = verify( { identity => signatures }, original)
+    return results[identity]
+  end # def verify_one
+
+  def verify(signatures, original)
+    if !signatures.is_a(Hash)
+      raise ArgumentError.new("Expected hash, got #{signatures.class.name}")
     end
 
     ensure_connected
     identities = verifying_identities
     results = {}
-    identities.each do |identity|
-      results[identity] = identity.ssh_do_verify(signature, original)
+    signatures.each do |signer_id, signature|
+      identities.each do |identity|
+        results[identity] = identity.ssh_do_verify(signature.signature, original)
+      end
     end
     return results
   end
@@ -112,8 +142,17 @@ class SSHKeyVerifier
     File.new(authorized_keys_file).each do |line|
       next if line =~ /^\s*$/    # Skip blanks
       next if line =~ /^\s*\#$/  # Skip comments
-      keys << Net::SSH::KeyFactory.load_data_public_key(line)
+      identity = Net::SSH::KeyFactory.load_data_public_key(line)
+      # Add the '.comment' attribute to our key
+      identity.extend(Net::SSH::Authentication::Agent::Comment)
+
+      match = AUTHORIZED_KEYS_REGEX.match(line)
+      if match
+        identity.comment = match[-1] 
+      else
+        puts "No comment or could not parse #{line}"
+      end
     end
     return keys
   end
-end # class SSHKeyAuth
+end; end; end # class SSH::Net::Verifier

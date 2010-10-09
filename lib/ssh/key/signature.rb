@@ -1,6 +1,6 @@
 # TODO(sissel): Cache keys read from disk?
 #
-class SSHKeySignature
+class Signatur
   attr_reader :type
   attr_reader :signature
   attr_accessor :identity

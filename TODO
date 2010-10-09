@@ -1,2 +1,1 @@
-- Read public keys from authorized_keys file using Net::SSH::KeyFactory#load_public_key
-  and #load_data_public_key
+- Inject 'comment' field for keys loaded from authorized_keys file
