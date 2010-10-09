@@ -9,10 +9,9 @@ verifier = SSH::Key::Verifier.new
 data = "hello"
 sigs = signer.sign(data)
 
-ap verifier.verify(signs)
-#sigs.each do |identity, sig|
-  #if agent.verify?(sig, data)
-    #puts "Verified: #{identity.comment}"
-  #end
-#end # sigs.each
+# Should succeed
+print "Verified: %s" % verifier.verify(signs, data)
+
+# Should fail
+print "Verified: %s" % verifier.verify(signs, "foobar#{data}")
 

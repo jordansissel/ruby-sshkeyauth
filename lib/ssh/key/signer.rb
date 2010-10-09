@@ -9,9 +9,8 @@ module SSH; module Key; class Signer
   attr_accessor :sshd_config_file
   attr_accessor :logger
 
-  def initialize(account)
-    @account = account
-    @agent = Net::SSH::Authentication::Agent.new
+  def initialize
+    @agent = ::Net::SSH::Authentication::Agent.new
     @use_agent = true
     @logger = Logger.new(STDERR)
   end # def initialize
@@ -19,7 +18,7 @@ module SSH; module Key; class Signer
   def ensure_connected
     begin
       @agent.connect! if !@agent.socket
-    rescue Net::SSH::Authentication::AgentNotAvailable => e
+    rescue ::Net::SSH::Authentication::AgentNotAvailable => e
       @use_agent = false
     end
   end # def ensure_connected

@@ -4,7 +4,7 @@ require "rubygems"
 require "net/ssh"
 require "etc"
 
-module SSH; module Net; class Verifier
+module SSH; module Key; class Verifier
   attr_accessor :account
   attr_accessor :sshd_config_file
   attr_accessor :logger
@@ -155,4 +155,4 @@ module SSH; module Net; class Verifier
     end
     return keys
   end
-end; end; end # class SSH::Net::Verifier
+end; end; end # class SSH::Key::Verifier
