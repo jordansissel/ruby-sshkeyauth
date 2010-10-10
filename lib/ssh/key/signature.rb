@@ -1,6 +1,6 @@
 # TODO(sissel): Cache keys read from disk?
 #
-class Signatur
+module SSH; module Key; class Signature
   attr_reader :type
   attr_reader :signature
   attr_accessor :identity
@@ -11,7 +11,7 @@ class Signatur
   end
 
   def self.from_string(string)
-    keysig = SSHKeySignature.new
+    keysig = self.new
     keysig.parse(string)
     return keysig
   end
@@ -28,4 +28,4 @@ class Signatur
     offset += 4
     @signature = string[offset ..(offset + siglen)]
   end # def parse
-end
+end; end; end # class SSH::Key::Signature

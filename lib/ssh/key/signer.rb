@@ -2,6 +2,7 @@
 
 require "rubygems"
 require "net/ssh"
+require "ssh/key/signature"
 require "etc"
 
 module SSH; module Key; class Signer
@@ -13,6 +14,7 @@ module SSH; module Key; class Signer
     @agent = ::Net::SSH::Authentication::Agent.new
     @use_agent = true
     @logger = Logger.new(STDERR)
+    @logger.level = Logger::WARN
   end # def initialize
 
   def ensure_connected
@@ -43,7 +45,7 @@ module SSH; module Key; class Signer
     identities = signing_identities 
     signatures = {}
     identities.each do |identity|
-      signatures[identity] = SSHKeySignature.from_string(@agent.sign(identity, string))
+      signatures[identity] = SSH::Key::Signature.from_string(@agent.sign(identity, string))
       signatures[identity].identity = identity
     end
     return signatures

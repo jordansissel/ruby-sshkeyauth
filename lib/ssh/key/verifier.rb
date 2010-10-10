@@ -2,6 +2,7 @@
 
 require "rubygems"
 require "net/ssh"
+require "ssh/key/signature"
 require "etc"
 
 module SSH; module Key; class Verifier
@@ -30,6 +31,7 @@ module SSH; module Key; class Verifier
     @use_agent = true
     @sshd_config_file = "/etc/ssh/sshd_config"
     @logger = Logger.new(STDERR)
+    @logger.level = Logger::WARN
   end # def initialize
 
   def ensure_connected
@@ -57,23 +59,32 @@ module SSH; module Key; class Verifier
     return false
   end # def verify?
 
-  def verify_one(signature, original)
-    identity = :default
-    results = verify( { identity => signatures }, original)
-    return results[identity]
-  end # def verify_one
-
+  # Verify an original with the signatures.
+  # * signatures - a hash of { identity => signature } values
+  #   or, it can be an array of signature strings
+  #   or, it can simply be a signature string.
+  # * original - the original string value to verify
   def verify(signatures, original)
-    if !signatures.is_a(Hash)
-      raise ArgumentError.new("Expected hash, got #{signatures.class.name}")
-    end
 
     ensure_connected
     identities = verifying_identities
     results = {}
-    signatures.each do |signer_id, signature|
+
+    if signatures.is_a? Hash
+      inputs = signatures.values
+    elsif signatures.is_a? Array
+      inputs = signatures
+    elsif signatures.is_a? String
+      inputs = [signatures]
+    end
+
+    if inputs[0].is_a? SSH::Key::Signature
+      inputs = inputs.collect { |i| i.signature }
+    end
+
+    inputs.each do |signature|
       identities.each do |identity|
-        results[identity] = identity.ssh_do_verify(signature.signature, original)
+        results[identity] = identity.ssh_do_verify(signature, original)
       end
     end
     return results
@@ -81,10 +92,14 @@ module SSH; module Key; class Verifier
 
   def verifying_identities
     identities = []
-    @agent.identities.each { |id| identities << id }
+    if @use_agent
+      ensure_connected 
+      @agent.identities.each { |id| identities << id }
+    end
 
     # Verifying should include your authorized_keys file, too, if we can find it.
     authorized_keys.each { |id| identities << id }
+    return identities
   end
 
   def authorized_keys
