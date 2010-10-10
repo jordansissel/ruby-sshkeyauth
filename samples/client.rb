@@ -4,6 +4,7 @@
 require "base64"
 require "json"
 $:.unshift "../lib"
+$:.unshift "lib"
 require "ssh/key/signer"
 
 def main(argv)
@@ -14,7 +15,7 @@ def main(argv)
   end
   signer = SSH::Key::Signer.new
   sigs = signer.sign(data)
-  sigs.each do |identity, signature|
+  sigs.each do |signature|
     sig64 = Base64.encode64(signature.signature)
     puts({ "original" => data, "signature" => sig64 }.to_json)
   end

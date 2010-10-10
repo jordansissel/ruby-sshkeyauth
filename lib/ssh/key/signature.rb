@@ -1,8 +1,8 @@
 # TODO(sissel): Cache keys read from disk?
 #
 module SSH; module Key; class Signature
-  attr_reader :type
-  attr_reader :signature
+  attr_accessor :type
+  attr_accessor :signature
   attr_accessor :identity
 
 
