@@ -121,15 +121,6 @@ Both:
 <pre>
 % ruby client.rb "hello" | SSH_AUTH_SOCK= ruby server.rb
 W, [2010-10-10T03:07:02.866074 #26915]  WARN -- : SSH Agent not available
-W, [2010-10-10T03:07:02.866323 #26915]  WARN -- : Error from agent query: symbol string may not contain `\0'
-W, [2010-10-10T03:07:02.872258 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
-... false
-W, [2010-10-10T03:07:02.872427 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
-... false
-W, [2010-10-10T03:07:02.872506 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
-... false
-W, [2010-10-10T03:07:02.872583 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
-... true
 true
 </pre>
 
