@@ -39,6 +39,11 @@ Otherwise, you are welcome to clone this repository.
 
 h2. Example
 
+h3. First Requirements
+
+Signing requires you either have an ssh agent running or explicitly tell the
+signer about an ssh private key file.
+
 h3. Sign a string
 
 Signing a string will sign with all known ssh keys. This is useful for
@@ -51,6 +56,16 @@ signature.
 require "ssh/key/signer"
 
 signer = SSH::Key::Signer.new
+# By default we'll automatically use your ssh agent for signing keys.
+# But if you want to also (or instead) specify a private key file, use this:
+signer.add_key_file("/path/to/key", "mypassphrase")
+
+# Of course, if your key doesn't have a passphrase, you can omit the argument:
+# This works well with host keys, too, if you want to sign messages as a host
+# instead of a user.
+signer.add_key_file("/path/to/key")
+
+# Now sign a string (will sign with all known private or agent keys)
 signatures = signer.sign("Hello world")
 
 # 'signatures' is an array of SSH::Key::Signature which has properties:
@@ -70,6 +85,8 @@ with Verifier#add_public_key_data.
 <pre>
 require "ssh/key/verifier"
 verifier = SSH::Key::Verifier.new
+
+# Again, by default we'll try to use your ssh agent.
 
 # from above, 'signatures'
 verified = verifier.verify?(signatures, original)
@@ -127,3 +144,6 @@ h2.  TODO
   up which ssh key should be used to verify. That is, we should look for matching
   public keys that are valid for the user and then verify with that.  the full
   public key to identify which public key we are using to avoid unnecessary
+* Currently restricted to signing with private keys and verifying with public keys.
+  Obviously, signing with public keys and verifying with private keys would be useful,
+  too. However, I don't think we can verify using private keys using ssh agents.
