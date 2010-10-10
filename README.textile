@@ -101,7 +101,7 @@ h3. Using the stuff in samples/
 
 The samples/ directory has a 'client' and 'server'. The client does signing;
 server does verification. Client writes to stdout; server reads from stdin.
-They both use json for and base64 for simplicity.
+They both use json for and base64 for simplicity in message passing.
 
 Check your ssh-agent has keys loaded:
 
