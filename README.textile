@@ -1,5 +1,9 @@
+h1. SSH Key Authentication for Ruby
 
-This projects aims to provide authentication by using ssh keys.
+This projects aims to provide authentication (signing and verifying) by using
+ssh keys.
+
+h2. Why?
 
 Most infrastructures I've managed have had bits of single-sign-on mixed
 not-so-single-sign-on. Further, the first thing I disable in sshd is always
@@ -16,9 +20,110 @@ for some things. Further, teaching engineers how to use SSH with keys is hard
 enough without saying "oh, here's another authentication scheme with your SSL
 cert."
 
-Add PGP to the mix, and you've got big frownyface - from me, anyway.
+Add PGP to the mix, and you've got big frownyface - from me, anyway. So many
+systems require one unique authentication mechanism that you end up with N
+mechanisms. Hopefully this tool lets you avoid that if possible.
 
-The point of writing this module was to allow authentication of messages from
-specific users over mcollective. The goal is to be able to use keys in your
-ssh-agent and sign messages - having them verified on the remote end by using
-your own user's authorized_keys file.
+The original point of writing this module was to allow authentication of
+messages from specific users over mcollective. The goal is to be able to use
+keys in your ssh-agent and sign messages and have them verified on the remote
+end by using your own user's authorized_keys file.
+
+h2. Get with the downloading
+
+To install sshkeyauth, you can use gem:
+
+bc. gem install sshkeyauth
+
+Otherwise, you are welcome to clone this repository.
+
+h2. Example
+
+h3. Sign a string
+
+Signing a string will sign with all known ssh keys. This is useful for
+broadcast media like mcollective where you don't have the luxury of
+challenge-response (two-way, multi-message communication). For systems with
+challenge-response, you can simply iterate over the results and try each
+signature.
+
+<pre>
+require "ssh/key/signer"
+
+signer = SSH::Key::Signer.new
+signatures = signer.sign("Hello world")
+
+# 'signatures' is an array of SSH::Key::Signature which has properties:
+#   type - the ssh key type (ssh-rsa, ssh-dsa)
+#   signature - the signature string (bytes)
+#   identity - the identity that signed the original string
+</pre>
+
+h3. Verifying a signature
+
+Verifying requires you have a signature and the original string.
+The verifier will use your ssh agent if possible. Disable this by setting
+Verifier#use_agent=false. It will also try to find your user's authorized_keys
+file and the public keys in it. Additionally, you can add public key strings
+with Verifier#add_public_key_data.
+
+<pre>
+require "ssh/key/verifier"
+verifier = SSH::Key::Verifier.new
+
+# from above, 'signatures'
+verified = verifier.verify?(signatures, original)
+puts "Verified: #{verified}"
+# the above should print 'true' if verification was successful.
+</pre>
+
+You could also use SSH::Key::Verifier#verify(...) to get a detailed result of
+the verification.
+
+h3. Using the stuff in samples/
+
+The samples/ directory has a 'client' and 'server'. The client does signing;
+server does verification. Client writes to stdout; server reads from stdin.
+They both use json for and base64 for simplicity.
+
+Check your ssh-agent has keys loaded:
+
+<pre>
+% ssh-add -l
+2048 4b:cc:f1:b7:60:99:ac:77:b3:51:38:3e:f4:b6:d6:74 id_rsa_tester (RSA)
+</pre>
+
+Client-only:
+
+<pre>
+% ruby client.rb "hello"
+{"signature":"INBpScDBdmmRjrEbLjyarGwoZh1tGEtVVHX8syq94Z/hN36B0r88FhCXjcPj\ngafhVDhZXAaoVSSE0L2o8i045F7Fbn8Uh0jjmCWKJX8jY0ZqNVWfetmfjbEL\nuovuTR5+pBhnf5QMVgAXirNBqvT0vOPcrOuHFr9kcAH7RYdLydPyQmVDyjGa\nOTOffumaUFLX/KbCM/4jR0zpVA8i4E9MlEwd7gGNy1RmE4chZvexP6rgMMyk\n52BUT12QIiXiXbY7SzR5AwrfSJbw+CAudQEHm4rjPTgATZvqhyeNuEuYjpwA\n3RTRl9gA7Qrc/Gcwt9jMlkKgmOr8OMQRPZr2l2YMHg==\n","original":"hello"}
+</pre>
+
+Both:
+<pre>
+% ruby client.rb "hello" | SSH_AUTH_SOCK= ruby server.rb
+W, [2010-10-10T03:07:02.866074 #26915]  WARN -- : SSH Agent not available
+W, [2010-10-10T03:07:02.866323 #26915]  WARN -- : Error from agent query: symbol string may not contain `\0'
+W, [2010-10-10T03:07:02.872258 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
+... false
+W, [2010-10-10T03:07:02.872427 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
+... false
+W, [2010-10-10T03:07:02.872506 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
+... false
+W, [2010-10-10T03:07:02.872583 #26915]  WARN -- : Trying key -----BEGIN RSA PUBLIC KEY-----
+... true
+true
+</pre>
+
+We empty 'SSH_AUTH_SOCK' to prevent the 'server' from using the ssh agent for
+public key knowledge (forces authorized_keys usage). Server will try all ssh
+keys in your user's authorized_keys file. 
+
+h2.  TODO
+
+* Currently we iterate all known public keys (for a user, etc).
+* Send the public key along with any signature so the reciever can easily look
+  up which ssh key should be used to verify. That is, we should look for matching
+  public keys that are valid for the user and then verify with that.  the full
+  public key to identify which public key we are using to avoid unnecessary
