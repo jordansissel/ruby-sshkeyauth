@@ -67,7 +67,7 @@ module SSH; module Key; class Verifier
   def verify?(signature, original)
     results = verify(signature, original)
     results.each do |identity, verified|
-      @logger.warn "Trying key #{identity.to_s[0..30]}... #{verified}"
+      @logger.info "Trying key #{identity.to_s[0..30]}... #{verified}"
       return true if verified
     end
     return false

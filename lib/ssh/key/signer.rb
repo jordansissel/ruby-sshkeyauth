@@ -14,10 +14,8 @@ module SSH; module Key; class Signer
   def initialize
     @agent = Net::SSH::Authentication::Agent.new
     @use_agent = true
-    #@logger = Logger.new(STDERR)
-    #@logger.level = Logger::WARN
-    @logger = Logger.new("/tmp/verifier.log")
-    @logger.level = Logger::INFO
+    @logger = Logger.new(STDERR)
+    @logger.level = Logger::WARN
     @keys = []
   end # def initialize
 
