@@ -9,14 +9,12 @@ Gem::Specification.new do |spec|
   #svnrev = %x{svn info}.split("\n").grep(/Revision:/).first.split(" ").last.to_i
   rev = Time.now.strftime("%Y%m%d%H%M%S")
   spec.name = "sshkeyauth"
-  spec.version = "0.0.1"
-  spec.summary = "eventmachine tail - a file tail implementation with glob support"
-  spec.description = "Add file 'tail' implemented with EventMachine. Also includes a 'glob watch' class for watching a directory pattern for new matches, like /var/log/*.log"
+  spec.version = "0.0.2"
+  spec.summary = "ssh key authentication (signing and verification)"
+  spec.description = "Use your ssh keys (and your ssh agent) to sign and verify messages"
   spec.add_dependency("net-ssh")
   spec.files = files
   spec.require_paths << "lib"
-  #spec.bindir = "bin"
-  #spec.executables << "rtail"
 
   spec.author = "Jordan Sissel"
   spec.email = "jls@semicomplete.com"
