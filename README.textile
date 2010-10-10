@@ -11,7 +11,9 @@ password authentication and make sure everyone gets an ssh key and knows
 how to use it.
 
 I like ssh keys. They're simple. On my infrastructure, they're everywhere. It's
-how you log in.
+how you log in. Further, like kerberos tickets, you can forward your ssh agent
+along with your ssh sessions letting you forward your credentials more
+naturally than, say, with ssl or pgp.
 
 With tools like mcollective, openvpn, etc, you often need a way to authorize
 and authenticate users. With OpenVPN you can use passwords or SSL certs.
