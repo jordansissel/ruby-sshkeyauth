@@ -130,13 +130,35 @@ We empty 'SSH_AUTH_SOCK' to prevent the 'server' from using the ssh agent for
 public key knowledge (forces authorized_keys usage). Server will try all ssh
 keys in your user's authorized_keys file. 
 
+h2. Scaling/Speed
+
+You can use 'openssl speed rsa' to benchmark how many signatures and
+verifications per second you can do. A sample output looks like this:
+
+<pre>
+                  sign    verify    sign/s verify/s
+rsa  512 bits 0.000143s 0.000013s   6985.0  79548.6
+rsa 1024 bits 0.000645s 0.000035s   1550.7  28378.6
+rsa 2048 bits 0.004012s 0.000113s    249.3   8858.3
+rsa 4096 bits 0.026481s 0.000406s     37.8   2460.7
+</pre>
+
+Verification is much faster than signing, which is good becuase in many cases
+you probably  have many more public keys to verify against than you would to
+sign against.
+
 h2.  TODO
 
-* Currently we iterate all known public keys (for a user, etc).
+* Currently we iterate all known public keys (for a user, etc), this may be
+  undesirable in some cases.
 * Send the public key along with any signature so the reciever can easily look
   up which ssh key should be used to verify. That is, we should look for matching
   public keys that are valid for the user and then verify with that.  the full
-  public key to identify which public key we are using to avoid unnecessary
+  public key to identify which public key we are using to avoid unnecessary extra key
+  signature checking, which can be costly at scale (especially if you are verifying
+  against a known_hosts file of thousands and can't find the host entry).
 * Currently restricted to signing with private keys and verifying with public keys.
   Obviously, signing with public keys and verifying with private keys would be useful,
   too. However, I don't think we can verify using private keys using ssh agents.
+* Add helper methods for verifying a signature against a known_hosts key
+  (lookup using ssh-keygen -F <hostname>)
