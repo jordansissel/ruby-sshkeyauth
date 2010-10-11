@@ -3,9 +3,12 @@
 require "rubygems"
 require "net/ssh"
 require "ssh/key/signature"
+require "ssh/key/helper"
 require "etc"
 
 module SSH; module Key; class Signer
+  include SSH::Key::Helper
+
   attr_accessor :account
   attr_accessor :sshd_config_file
   attr_accessor :logger
@@ -26,12 +29,6 @@ module SSH; module Key; class Signer
       @use_agent = false
     end
   end # def ensure_connected
-
-  # Add a private key to this signer.
-  def add_key_file(path, passphrase=nil)
-    @logger.info "Adding key from file #{path} (with#{passphrase ? "" : "out"} passphrase)"
-    @keys << Net::SSH::KeyFactory.load_private_key(path, passphrase)
-  end # def add_key_file
 
   # Signs a string with all available ssh keys
   #

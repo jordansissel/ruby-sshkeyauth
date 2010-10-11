@@ -3,13 +3,12 @@
 require "rubygems"
 require "net/ssh"
 require "ssh/key/signature"
+require "ssh/key/helper"
 require "etc"
 
-if $DEBUG
-  require "awesome_print"
-end
-
 module SSH; module Key; class Verifier
+  include SSH::Key::Helper
+
   attr_accessor :account
   attr_accessor :sshd_config_file
   attr_accessor :authorized_keys_file
@@ -126,11 +125,6 @@ module SSH; module Key; class Verifier
     return identities
   end # def verifying_identities
 
-  def add_public_key_data(data)
-    @logger.info "Adding key from data #{data}"
-    @keys << Net::SSH::KeyFactory.load_data_public_key(data)
-  end # def add_key_file
-
   def find_authorized_keys_file
     # Look up the @account's home directory.
     begin
@@ -226,7 +220,6 @@ module SSH; module Key; class Verifier
 
       keys << identity
     end
-    #@logger.info keys.awesome_inspect
     return keys
   end
 end; end; end # class SSH::Key::Verifier
