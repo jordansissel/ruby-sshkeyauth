@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   #svnrev = %x{svn info}.split("\n").grep(/Revision:/).first.split(" ").last.to_i
   rev = Time.now.strftime("%Y%m%d%H%M%S")
   spec.name = "sshkeyauth"
-  spec.version = "0.0.4"
+  spec.version = "0.0.6"
   spec.summary = "ssh key authentication (signing and verification)"
   spec.description = "Use your ssh keys (and your ssh agent) to sign and verify messages"
   spec.add_dependency("net-ssh")
