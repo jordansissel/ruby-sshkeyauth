@@ -3,7 +3,8 @@
 
 require "base64"
 require "json"
-$:.unshift "../lib"
+
+$:.unshift "#{File.dirname(__FILE__)}/../lib"
 require "ssh/key/verifier"
 
 def main(argv)
@@ -13,6 +14,7 @@ def main(argv)
     input = argv
   end
   verifier = SSH::Key::Verifier.new
+  verifier.use_agent = false
 
   input.each do |line|
     data = JSON.parse(line)

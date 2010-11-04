@@ -80,4 +80,8 @@ module SSH; module Key; class Signer
     end
     return identities
   end # def signing_identities
+
+  def add_private_key_file(path, passphrase=nil)
+    @keys << Net::SSH::KeyFactory.load_private_key(path, passphrase)
+  end # def add_private_key_file(path)
 end; end; end # class SSH::Key::Signer

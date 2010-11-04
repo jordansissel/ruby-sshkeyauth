@@ -3,8 +3,8 @@
 
 require "base64"
 require "json"
-$:.unshift "../lib"
-$:.unshift "lib"
+
+$:.unshift "#{File.dirname(__FILE__)}/../lib"
 require "ssh/key/signer"
 
 def main(argv)

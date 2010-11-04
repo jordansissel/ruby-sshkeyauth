@@ -38,9 +38,8 @@ module SSH; module Key; class Verifier
     @use_authorized_keys = true
     @sshd_config_file = "/etc/ssh/sshd_config"
     @authorized_keys_file = nil
-    #@logger = Logger.new("/tmp/verifier.log")
     @logger = Logger.new(STDERR)
-    @logger.level = Logger::WARN
+    @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
     @keys = []
   end # def initialize
 
@@ -66,7 +65,6 @@ module SSH; module Key; class Verifier
   def verify?(signature, original)
     results = verify(signature, original)
     results.each do |identity, verified|
-      @logger.info "Trying key #{identity.to_s[0..30]}... #{verified}"
       return true if verified
     end
     return false
@@ -84,20 +82,26 @@ module SSH; module Key; class Verifier
     results = {}
 
     if signatures.is_a? Hash
+      @logger.debug("verify 'signatures' is a Hash")
       inputs = signatures.values
     elsif signatures.is_a? Array
+      @logger.debug("verify 'signatures' is an Array")
       inputs = signatures
     elsif signatures.is_a? String
+      @logger.debug("verify 'signatures' is an String")
       inputs = [signatures]
     end
 
     if inputs[0].is_a? SSH::Key::Signature
+      @logger.debug("verify 'signatures' is an array of Signatures")
       inputs = inputs.collect { |i| i.signature }
     end
 
     inputs.each do |signature|
       identities.each do |identity|
-        results[identity] = identity.ssh_do_verify(signature, original)
+        key = [signature, identity]
+        results[key] = identity.ssh_do_verify(signature, original)
+        @logger.info "Trying key #{identity.to_s.split("\n")[1]}... #{results[key]}"
       end
     end
     return results
@@ -207,6 +211,7 @@ module SSH; module Key; class Verifier
       end
 
       identity = Net::SSH::KeyFactory.load_data_public_key(line)
+
       # Add the '.comment' attribute to our key
       identity.extend(Net::SSH::Authentication::Agent::Comment)
 
@@ -222,4 +227,12 @@ module SSH; module Key; class Verifier
     end
     return keys
   end
+
+  def add_private_key_file(path, passphrase=nil)
+    @keys << Net::SSH::KeyFactory.load_private_key(path, passphrase)
+  end # def add_private_key_file(path)
+
+  def add_public_key_file(path, passphrase=nil)
+    @keys << Net::SSH::KeyFactory.load_public_key(path)
+  end # def add_private_key_file(path)
 end; end; end # class SSH::Key::Verifier
