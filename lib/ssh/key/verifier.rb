@@ -228,11 +228,21 @@ module SSH; module Key; class Verifier
     return keys
   end
 
+  # Add a private key to this Verifier from a file (like ".ssh/id_rsa")
+  # * path - the string path to the key
+  # * passphrase - the passphrase for this key, omit if no passphrase.
   def add_private_key_file(path, passphrase=nil)
     @keys << Net::SSH::KeyFactory.load_private_key(path, passphrase)
   end # def add_private_key_file(path)
 
-  def add_public_key_file(path, passphrase=nil)
+  # Add a public  key to this Verifier from a file (like ".ssh/id_rsa.pub")
+  #
+  # This is for individual key files. If you want to specify an alternate
+  # location for your authorized_keys file, set:
+  #   Verifier#authorized_keys_file = "/path/to/authorized_keys"
+  #
+  # * path - the string path to the public key
+  def add_public_key_file(path)
     @keys << Net::SSH::KeyFactory.load_public_key(path)
   end # def add_private_key_file(path)
 end; end; end # class SSH::Key::Verifier

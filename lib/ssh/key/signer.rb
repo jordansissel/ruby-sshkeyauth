@@ -63,6 +63,8 @@ module SSH; module Key; class Signer
     return signatures
   end
 
+  # Get a list of all identities we can sign with. This will pull from your
+  # ssh-agent if enabled.
   def signing_identities
     identities = []
     if @use_agent
@@ -81,6 +83,9 @@ module SSH; module Key; class Signer
     return identities
   end # def signing_identities
 
+  # Add a private key to this Signer from a file (like ".ssh/id_rsa")
+  # * path - the string path to the key
+  # * passphrase - the passphrase for this key, omit if no passphrase.
   def add_private_key_file(path, passphrase=nil)
     @keys << Net::SSH::KeyFactory.load_private_key(path, passphrase)
   end # def add_private_key_file(path)
