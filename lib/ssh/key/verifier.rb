@@ -163,7 +163,7 @@ module SSH; module Key; class Verifier
         return nil
       end
 
-      authorized_keys_file.gsubs!(/%h/, account_info.dir)
+      authorized_keys_file.gsub!(/%h/, account_info.dir)
     end
 
     # If relative path, use the homedir.
