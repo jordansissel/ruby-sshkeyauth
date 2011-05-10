@@ -167,7 +167,7 @@ module SSH; module Key; class Verifier
     end
 
     # If relative path, use the homedir.
-    if !authorized_keys_file[0,1] == "/"
+    if authorized_keys_file[0] != "/"
       if account_info == nil
         @logger.warn("No homedirectory for #{@account} and authorized_keys path is relative, skipping authorized_keys")
         return nil
