@@ -48,7 +48,7 @@ module SSH; module Key; class Verifier
       @agent.connect! if !@agent.socket
     rescue Net::SSH::Authentication::AgentNotAvailable => e
       @use_agent = false
-      @logger.warn "SSH Agent not available"
+      @logger.info "SSH Agent not available"
     rescue => e
       @use_agent = false
       @logger.warn "Unexpected error ocurred. Disabling agent usage."
