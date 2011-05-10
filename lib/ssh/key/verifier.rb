@@ -109,8 +109,8 @@ module SSH; module Key; class Verifier
 
   def verifying_identities
     identities = []
+    ensure_connected 
     if @use_agent
-      ensure_connected 
       begin
         @agent.identities.each { |id| identities << id }
       rescue ArgumentError => e
