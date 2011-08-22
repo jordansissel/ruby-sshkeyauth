@@ -200,7 +200,7 @@ module SSH; module Key; class Verifier
     @logger.info("AuthorizedKeysFile ==> #{authorized_keys_file}")
     File.new(authorized_keys_file).each do |line|
       next if line =~ /^\s*$/    # Skip blanks
-      next if line =~ /^\s*\#$/  # Skip comments
+      next if line =~ /^\s*\#/  # Skip comments
       @logger.info line
 
       comment = nil
