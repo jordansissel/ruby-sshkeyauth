@@ -212,6 +212,7 @@ module SSH; module Key; class Verifier
     keys = []
 
     if @authorized_keys_command
+      @logger.info("Fetching authorized keys via #{authorized_keys_command}")
       %x{#{authorized_keys_command} #{account.shellescape}}.split("\n").each do |line|
         keys << line_identity(line)
       end
