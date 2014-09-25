@@ -228,16 +228,16 @@ module SSH; module Key; class Verifier
       @logger.info("No authorized keys file found.")
     end
 
-    if !File.exists?(authorized_keys_file)
+    if File.exists?(authorized_keys_file)
+      @logger.info("AuthorizedKeysFile ==> #{authorized_keys_file}")
+      File.new(authorized_keys_file).each do |line|
+        next if line =~ /^\s*$/    # Skip blanks
+        next if line =~ /^\s*\#/  # Skip comments
+
+        keys << line_identity(line)
+      end
+    else
       @logger.info("User '#{@account}' has no authorized keys file '#{authorized_keys_file}'")
-    end
-
-    @logger.info("AuthorizedKeysFile ==> #{authorized_keys_file}")
-    File.new(authorized_keys_file).each do |line|
-      next if line =~ /^\s*$/    # Skip blanks
-      next if line =~ /^\s*\#/  # Skip comments
-
-      keys << line_identity(line)
     end
     return keys
   end
