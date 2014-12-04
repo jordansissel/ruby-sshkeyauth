@@ -15,6 +15,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("net-ssh")
   spec.files = files
   spec.require_paths << "lib"
+  spec.license = "Apache 2.0"
 
   spec.author = "Jordan Sissel"
   spec.email = "jls@semicomplete.com"
