@@ -5,12 +5,14 @@ require "net/ssh"
 require "ssh/key/signature"
 require "ssh/key/helper"
 require "etc"
+require "shellwords"
 
 module SSH; module Key; class Verifier
   include SSH::Key::Helper
 
   attr_accessor :account
   attr_accessor :sshd_config_file
+  attr_accessor :authorized_keys_command
   attr_accessor :authorized_keys_file
   attr_accessor :logger
   attr_accessor :use_agent
@@ -37,6 +39,7 @@ module SSH; module Key; class Verifier
     @use_agent = true
     @use_authorized_keys = true
     @sshd_config_file = "/etc/ssh/sshd_config"
+    @authorized_keys_command = nil
     @authorized_keys_file = nil
     @logger = Logger.new(STDERR)
     @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
@@ -179,7 +182,42 @@ module SSH; module Key; class Verifier
     return authorized_keys_file
   end # find_authorized_keys_file
 
+  def line_identity(line)
+    @logger.info line
+
+    comment = nil
+
+    # TODO(sissel): support more known_hosts formats
+    if line =~ /^\|1\|/ # hashed known_hosts format
+      comment, line = line.split(" ",2)
+    end
+
+    identity = Net::SSH::KeyFactory.load_data_public_key(line)
+
+    # Add the '.comment' attribute to our key
+    identity.extend(Net::SSH::Authentication::Agent::Comment)
+
+    match = AUTHORIZED_KEYS_REGEX.match(line)
+    if match
+      comment = match[-1] 
+    else
+      puts "No comment or could not parse #{line}"
+    end
+    identity.comment = comment if comment
+
+    return identity
+  end #line_identity
+
   def authorized_keys
+    keys = []
+
+    if @authorized_keys_command
+      @logger.info("Fetching authorized keys via #{authorized_keys_command}")
+      %x{#{authorized_keys_command} #{account.shellescape}}.split("\n").each do |line|
+        keys << line_identity(line)
+      end
+    end
+
     if @authorized_keys_file
       authorized_keys_file = @authorized_keys_file
     else
@@ -188,42 +226,18 @@ module SSH; module Key; class Verifier
 
     if authorized_keys_file == nil
       @logger.info("No authorized keys file found.")
-      return []
-    end
+    else
+      if File.exists?(authorized_keys_file)
+        @logger.info("AuthorizedKeysFile ==> #{authorized_keys_file}")
+        File.new(authorized_keys_file).each do |line|
+          next if line =~ /^\s*$/    # Skip blanks
+          next if line =~ /^\s*\#/  # Skip comments
 
-    if !File.exists?(authorized_keys_file)
-      @logger.info("User '#{@account}' has no authorized keys file '#{authorized_keys_file}'")
-      return []
-    end
-
-    keys = []
-    @logger.info("AuthorizedKeysFile ==> #{authorized_keys_file}")
-    File.new(authorized_keys_file).each do |line|
-      next if line =~ /^\s*$/    # Skip blanks
-      next if line =~ /^\s*\#/  # Skip comments
-      @logger.info line
-
-      comment = nil
-
-      # TODO(sissel): support more known_hosts formats
-      if line =~ /^\|1\|/ # hashed known_hosts format
-        comment, line = line.split(" ",2)
-      end
-
-      identity = Net::SSH::KeyFactory.load_data_public_key(line)
-
-      # Add the '.comment' attribute to our key
-      identity.extend(Net::SSH::Authentication::Agent::Comment)
-
-      match = AUTHORIZED_KEYS_REGEX.match(line)
-      if match
-        comment = match[-1] 
+          keys << line_identity(line)
+        end
       else
-        puts "No comment or could not parse #{line}"
+        @logger.info("User '#{@account}' has no authorized keys file '#{authorized_keys_file}'")
       end
-      identity.comment = comment if comment
-
-      keys << identity
     end
     return keys
   end
