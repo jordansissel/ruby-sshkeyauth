@@ -99,6 +99,7 @@ module SSH; module Key; class Verifier
 
     inputs.each do |signature|
       identities.each do |identity|
+        next unless identity
         key = [signature, identity]
         results[key] = identity.ssh_do_verify(signature, original)
         @logger.info "Trying key #{identity.to_s.split("\n")[1]}... #{results[key]}"
