@@ -144,7 +144,7 @@ module SSH; module Key; class Verifier
     authorized_keys_file = ".ssh/authorized_keys"
 
     # Try to find the AuthorizedKeysFile definition in the config.
-    if File.exists?(@sshd_config_file)
+    if File.exist?(@sshd_config_file)
       begin
         authorized_keys_file = File.new(@sshd_config_file).grep(/^\s*AuthorizedKeysFile/)[-1].split(" ")[-1]
       rescue 
@@ -191,7 +191,7 @@ module SSH; module Key; class Verifier
       return []
     end
 
-    if !File.exists?(authorized_keys_file)
+    if !File.exist?(authorized_keys_file)
       @logger.info("User '#{@account}' has no authorized keys file '#{authorized_keys_file}'")
       return []
     end
