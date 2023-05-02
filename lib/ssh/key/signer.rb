@@ -55,7 +55,7 @@ module SSH; module Key; class Signer
         signature.signature = identity.ssh_do_sign(string)
       else
         # Only public signing identities come from our agent.
-        signature = SSH::Key::Signature.from_string(@agent.sign(identity, string))
+        signature = SSH::Key::Signature.from_string(@agent.sign(identity, string, 0x02))
       end
       signature.identity = identity
       signatures << signature
