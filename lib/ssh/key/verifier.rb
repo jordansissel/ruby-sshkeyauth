@@ -92,15 +92,23 @@ module SSH; module Key; class Verifier
       inputs = [signatures]
     end
 
-    if inputs[0].is_a? SSH::Key::Signature
-      @logger.debug("verify 'signatures' is an array of Signatures")
-      inputs = inputs.collect { |i| i.signature }
-    end
-
     inputs.each do |signature|
       identities.each do |identity|
-        key = [signature, identity]
-        results[key] = identity.ssh_do_verify(signature, original)
+        if signature.is_a? SSH::Key::Signature
+          @logger.debug("verify 'signatures' is an array of Signatures")
+          key = [signature.signature, identity]
+          results[key] = identity.ssh_do_verify(signature.signature, original, signature.type.rstrip)
+        else
+          @logger.debug("verify 'signatures' is array of Strings")
+          key = [signature, identity]
+          if identity.ssh_do_verify(signature, original,  {:host_key => 'rsa-sha2-256'})
+             results[key] = true
+          elsif identity.ssh_do_verify(signature, original)
+             results[key] = true
+          else
+             results[key] = false
+          end
+        end
         @logger.info "Trying key #{identity.to_s.split("\n")[1]}... #{results[key]}"
       end
     end
